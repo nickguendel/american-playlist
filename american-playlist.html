@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100 Greatest Songs — American Artists</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C8102E;
+    --navy: #05090f;
+    --cream: #F5F0E8;
+    --gold: #D4A843;
+    --green: #1DB954;
+    --white: #FFFFFF;
+    --track-bg: rgba(255,255,255,0.05);
+    --track-border: rgba(255,255,255,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background-color: var(--navy); color: var(--cream); font-family: 'Space Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+
+  header {
+    position: relative; padding: 60px 40px 40px;
+    border-bottom: 1px solid var(--track-border); overflow: hidden;
+    background: linear-gradient(135deg, #080e1a 0%, #0f1f3d 60%, #060c18 100%);
+  }
+  header::before {
+    content: '★'; position: absolute; top: -30px; right: -20px;
+    font-size: 280px; color: rgba(200,16,46,0.13); line-height: 1; pointer-events: none;
+  }
+  .flag-stripe {
+    height: 5px; margin-bottom: 30px; width: 80px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--red) 33%, var(--white) 33%, var(--white) 66%, var(--red) 66%);
+  }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.5rem,6vw,5rem); font-weight: 900; line-height: 0.95; letter-spacing: -2px; color: var(--white); }
+  h1 em { font-style: italic; color: var(--gold); }
+  .subtitle { margin-top: 16px; font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; color: rgba(245,240,232,0.85); }
+  .stats { display: flex; gap: 40px; margin-top: 30px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--red); }
+  .stat-label { font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.65); margin-top: 2px; }
+
+  #authBanner {
+    background: linear-gradient(90deg, #0a1a0a, #0d2010);
+    border-bottom: 1px solid rgba(29,185,84,0.3);
+    padding: 14px 40px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  #authBanner p { font-size: 0.7rem; color: rgba(255,255,255,0.75); letter-spacing: 1px; flex: 1; }
+  #authBanner p span { color: var(--green); font-weight: 700; }
+  .spotify-btn {
+    background: var(--green); color: #000; border: none;
+    font-family: 'Space Mono', monospace; font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; padding: 10px 20px;
+    cursor: pointer; border-radius: 50px; transition: transform 0.15s, background 0.15s;
+  }
+  .spotify-btn:hover { background: #1ed760; transform: scale(1.03); }
+
+  #nowPlaying {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5,9,15,0.97); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(29,185,84,0.25);
+    padding: 12px 40px; display: none; align-items: center; gap: 16px;
+  }
+  #nowPlaying.visible { display: flex; }
+  .np-art { width: 44px; height: 44px; border-radius: 4px; background: rgba(255,255,255,0.1); object-fit: cover; flex-shrink: 0; }
+  .np-info { flex: 1; min-width: 0; }
+  .np-title { font-family: 'Playfair Display', serif; font-size: 0.9rem; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .np-artist { font-size: 0.6rem; color: rgba(255,255,255,0.55); margin-top: 2px; letter-spacing: 1px; }
+  .np-controls { display: flex; align-items: center; gap: 12px; }
+  .np-progress { flex: 1; max-width: 200px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden; }
+  .np-bar { height: 100%; background: var(--green); width: 0%; transition: width 0.9s linear; border-radius: 2px; }
+  .np-time { font-size: 0.6rem; color: rgba(255,255,255,0.4); min-width: 36px; text-align: right; }
+  .np-btn { background: none; border: none; color: var(--white); cursor: pointer; font-size: 1.1rem; opacity: 0.8; transition: opacity 0.15s, transform 0.15s; padding: 4px; }
+  .np-btn:hover { opacity: 1; transform: scale(1.1); }
+  .np-btn.stop { color: var(--red); }
+
+  .controls { padding: 24px 40px; border-bottom: 1px solid var(--track-border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .filter-label { font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(245,240,232,0.4); margin-right: 6px; }
+  .genre-btn { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: rgba(245,240,232,0.6); font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; padding: 6px 14px; cursor: pointer; transition: all 0.2s; border-radius: 2px; }
+  .genre-btn:hover, .genre-btn.active { background: var(--red); border-color: var(--red); color: var(--white); }
+  .search-wrap { margin-left: auto; }
+  .search-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: var(--cream); font-family: 'Space Mono', monospace; font-size: 0.7rem; padding: 7px 14px; outline: none; width: 200px; border-radius: 2px; transition: border-color 0.2s; }
+  .search-input::placeholder { color: rgba(245,240,232,0.3); }
+  .search-input:focus { border-color: var(--gold); }
+
+  .playlist { padding: 0 40px 60px; }
+  .section-header { display: grid; grid-template-columns: 48px 1fr 160px 100px; gap: 16px; padding: 16px 16px; font-size: 0.58rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.65); border-bottom: 1px solid var(--track-border); margin-top: 16px; }
+  .track { display: grid; grid-template-columns: 48px 1fr 160px 100px; gap: 16px; padding: 13px 16px; border-bottom: 1px solid var(--track-border); align-items: center; transition: background 0.18s; cursor: pointer; animation: fadeIn 0.4s ease both; }
+  .track:hover { background: var(--track-bg); }
+  .track:hover .track-num { opacity: 0; }
+  .track:hover .play-icon { opacity: 1; }
+  .track.playing { background: rgba(29,185,84,0.08); border-left: 2px solid var(--green); }
+  .track.playing .track-num { opacity: 0; }
+  .track.playing .play-icon { opacity: 1; color: var(--green); }
+  .track.top10 .track-num { color: var(--red); }
+  .track-position { position: relative; text-align: center; }
+  .track-num { font-family: 'Playfair Display', serif; font-size: 1rem; color: rgba(255,255,255,0.45); transition: opacity 0.18s; }
+  .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0; transition: opacity 0.18s; color: var(--white); font-size: 1rem; }
+  .track-info { min-width: 0; }
+  .track-title { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; text-shadow: 0 1px 6px rgba(0,0,0,0.6); display: block; transition: color 0.18s; }
+  .track:hover .track-title { color: var(--gold); }
+  .track.playing .track-title { color: var(--green); }
+  .track-artist { font-size: 0.65rem; color: rgba(255,255,255,0.75); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.5px; }
+  .track-genre { font-size: 0.58rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); text-align: right; }
+  .track-year { font-size: 0.65rem; color: rgba(255,255,255,0.6); text-align: right; }
+  .no-results { padding: 60px 16px; text-align: center; color: rgba(245,240,232,0.3); font-size: 0.75rem; letter-spacing: 2px; display: none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  footer { text-align: center; padding: 30px; font-size: 0.6rem; letter-spacing: 3px; color: rgba(245,240,232,0.2); text-transform: uppercase; border-top: 1px solid var(--track-border); }
+
+  @media (max-width: 600px) {
+    header, .controls, .playlist, #authBanner, #nowPlaying { padding-left: 20px; padding-right: 20px; }
+    .section-header, .track { grid-template-columns: 36px 1fr 80px; }
+    .track-year { display: none; }
+    .search-wrap { width: 100%; }
+    .search-input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="flag-stripe"></div>
+  <h1>100 <em>Greatest</em><br>American Songs</h1>
+  <p class="subtitle">Born in the USA &nbsp;·&nbsp; All genres &nbsp;·&nbsp; All eras</p>
+  <div class="stats">
+    <div class="stat"><span class="stat-num">100</span><span class="stat-label">Tracks</span></div>
+    <div class="stat"><span class="stat-num">70+</span><span class="stat-label">Years of music</span></div>
+    <div class="stat"><span class="stat-num">10</span><span class="stat-label">Genres</span></div>
+  </div>
+</header>
+
+<div id="authBanner">
+  <p>🎵 Connect <span>Spotify Premium</span> to stream songs directly in this page</p>
+  <button class="spotify-btn" id="loginBtn">Connect Spotify</button>
+</div>
+
+<div id="nowPlaying">
+  <img class="np-art" id="npArt" src="" alt="">
+  <div class="np-info">
+    <div class="np-title" id="npTitle">—</div>
+    <div class="np-artist" id="npArtist">—</div>
+  </div>
+  <div class="np-controls">
+    <div class="np-progress"><div class="np-bar" id="npBar"></div></div>
+    <span class="np-time" id="npTime">0:30</span>
+    <button class="np-btn stop" id="stopBtn" title="Stop">■</button>
+  </div>
+</div>
+
+<div class="controls">
+  <span class="filter-label">Filter:</span>
+  <button class="genre-btn active" data-genre="all">All</button>
+  <button class="genre-btn" data-genre="Rock">Rock</button>
+  <button class="genre-btn" data-genre="Soul/R&B">Soul / R&B</button>
+  <button class="genre-btn" data-genre="Hip-Hop">Hip-Hop</button>
+  <button class="genre-btn" data-genre="Pop">Pop</button>
+  <button class="genre-btn" data-genre="Country">Country</button>
+  <button class="genre-btn" data-genre="Jazz/Blues">Jazz / Blues</button>
+  <button class="genre-btn" data-genre="Folk">Folk</button>
+  <button class="genre-btn" data-genre="Funk/Disco">Funk / Disco</button>
+  <div class="search-wrap">
+    <input class="search-input" type="text" id="searchInput" placeholder="Search songs or artists…">
+  </div>
+</div>
+
+<div class="playlist">
+  <div class="section-header">
+    <span>#</span><span>Song / Artist</span><span style="text-align:right">Genre</span><span style="text-align:right">Year</span>
+  </div>
+  <div id="trackList"></div>
+  <div class="no-results" id="noResults">No tracks found</div>
+</div>
+
+<footer>All artists American-born &nbsp;·&nbsp; Spotify Premium required for playback</footer>
+
+<script src="https://sdk.scdn.co/spotify-player.js"></script>
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+const CLIENT_ID   = '2ff81e15ce064f5ba392174221f31695';
+const REDIRECT_URI = 'http://127.0.0.1:8000/callback';
+const SCOPES = 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state';
+const PREVIEW_SECS = 30;
+
+// ── TRACKS ───────────────────────────────────────────────────────────────────
+const tracks = [
+  {n:1,  title:"Like a Rolling Stone",        artist:"Bob Dylan",              genre:"Folk",        year:1965},
+  {n:2,  title:"Johnny B. Goode",             artist:"Chuck Berry",            genre:"Rock",        year:1958},
+  {n:3,  title:"Born to Run",                 artist:"Bruce Springsteen",      genre:"Rock",        year:1975},
+  {n:4,  title:"Purple Haze",                 artist:"Jimi Hendrix",           genre:"Rock",        year:1967},
+  {n:5,  title:"Hotel California",            artist:"Eagles",                 genre:"Rock",        year:1977},
+  {n:6,  title:"Good Vibrations",             artist:"The Beach Boys",         genre:"Rock",        year:1966},
+  {n:7,  title:"Smells Like Teen Spirit",     artist:"Nirvana",                genre:"Rock",        year:1991},
+  {n:8,  title:"American Girl",               artist:"Tom Petty",              genre:"Rock",        year:1976},
+  {n:9,  title:"Sweet Home Chicago",          artist:"Robert Johnson",         genre:"Jazz/Blues",  year:1936},
+  {n:10, title:"Respect",                     artist:"Aretha Franklin",        genre:"Soul/R&B",    year:1967},
+  {n:11, title:"What's Going On",             artist:"Marvin Gaye",            genre:"Soul/R&B",    year:1971},
+  {n:12, title:"I Got You (I Feel Good)",     artist:"James Brown",            genre:"Soul/R&B",    year:1965},
+  {n:13, title:"A Change Is Gonna Come",      artist:"Sam Cooke",              genre:"Soul/R&B",    year:1964},
+  {n:14, title:"Dancing in the Street",       artist:"Martha & the Vandellas", genre:"Soul/R&B",    year:1964},
+  {n:15, title:"Superstition",                artist:"Stevie Wonder",          genre:"Soul/R&B",    year:1972},
+  {n:16, title:"Purple Rain",                 artist:"Prince",                 genre:"Soul/R&B",    year:1984},
+  {n:17, title:"No One",                      artist:"Alicia Keys",            genre:"Soul/R&B",    year:2007},
+  {n:18, title:"I Will Always Love You",      artist:"Whitney Houston",        genre:"Soul/R&B",    year:1992},
+  {n:19, title:"Crazy in Love",               artist:"Beyoncé",                genre:"Soul/R&B",    year:2003},
+  {n:20, title:"Rapper's Delight",            artist:"Sugarhill Gang",         genre:"Hip-Hop",     year:1979},
+  {n:21, title:"Fight the Power",             artist:"Public Enemy",           genre:"Hip-Hop",     year:1989},
+  {n:22, title:"Juicy",                       artist:"The Notorious B.I.G.",   genre:"Hip-Hop",     year:1994},
+  {n:23, title:"California Love",             artist:"2Pac",                   genre:"Hip-Hop",     year:1995},
+  {n:24, title:"Lose Yourself",               artist:"Eminem",                 genre:"Hip-Hop",     year:2002},
+  {n:25, title:"Gold Digger",                 artist:"Kanye West",             genre:"Hip-Hop",     year:2005},
+  {n:26, title:"HUMBLE.",                     artist:"Kendrick Lamar",         genre:"Hip-Hop",     year:2017},
+  {n:27, title:"God's Plan",                  artist:"Drake",                  genre:"Hip-Hop",     year:2018},
+  {n:28, title:"Empire State of Mind",        artist:"Jay-Z",                  genre:"Hip-Hop",     year:2009},
+  {n:29, title:"Ms. Jackson",                 artist:"OutKast",                genre:"Hip-Hop",     year:2000},
+  {n:30, title:"Billie Jean",                 artist:"Michael Jackson",        genre:"Pop",         year:1982},
+  {n:31, title:"Like a Prayer",               artist:"Madonna",                genre:"Pop",         year:1989},
+  {n:32, title:"...Baby One More Time",       artist:"Britney Spears",         genre:"Pop",         year:1998},
+  {n:33, title:"Shake It Off",                artist:"Taylor Swift",           genre:"Pop",         year:2014},
+  {n:34, title:"Bad Guy",                     artist:"Billie Eilish",          genre:"Pop",         year:2019},
+  {n:35, title:"Single Ladies",               artist:"Beyoncé",                genre:"Pop",         year:2008},
+  {n:36, title:"Fallin'",                     artist:"Alicia Keys",            genre:"Soul/R&B",    year:2001},
+  {n:37, title:"Irreplaceable",               artist:"Beyoncé",                genre:"Pop",         year:2006},
+  {n:38, title:"Happy",                       artist:"Pharrell Williams",      genre:"Pop",         year:2013},
+  {n:39, title:"Old Town Road",               artist:"Lil Nas X",              genre:"Pop",         year:2019},
+  {n:40, title:"I Walk the Line",             artist:"Johnny Cash",            genre:"Country",     year:1956},
+  {n:41, title:"Jolene",                      artist:"Dolly Parton",           genre:"Country",     year:1973},
+  {n:42, title:"Friends in Low Places",       artist:"Garth Brooks",           genre:"Country",     year:1990},
+  {n:43, title:"Take Me Home, Country Roads", artist:"John Denver",            genre:"Country",     year:1971},
+  {n:44, title:"Crazy",                       artist:"Patsy Cline",            genre:"Country",     year:1961},
+  {n:45, title:"Fancy",                       artist:"Reba McEntire",          genre:"Country",     year:1990},
+  {n:46, title:"Before He Cheats",            artist:"Carrie Underwood",       genre:"Country",     year:2005},
+  {n:47, title:"The Gambler",                 artist:"Kenny Rogers",           genre:"Country",     year:1978},
+  {n:48, title:"Body Like a Back Road",       artist:"Sam Hunt",               genre:"Country",     year:2017},
+  {n:49, title:"Tennessee Whiskey",           artist:"Chris Stapleton",        genre:"Country",     year:2015},
+  {n:50, title:"What a Wonderful World",      artist:"Louis Armstrong",        genre:"Jazz/Blues",  year:1967},
+  {n:51, title:"Summertime",                  artist:"Billie Holiday",         genre:"Jazz/Blues",  year:1936},
+  {n:52, title:"Take Five",                   artist:"Dave Brubeck Quartet",   genre:"Jazz/Blues",  year:1959},
+  {n:53, title:"Round Midnight",              artist:"Thelonious Monk",        genre:"Jazz/Blues",  year:1944},
+  {n:54, title:"So What",                     artist:"Miles Davis",            genre:"Jazz/Blues",  year:1959},
+  {n:55, title:"A Love Supreme",              artist:"John Coltrane",          genre:"Jazz/Blues",  year:1965},
+  {n:56, title:"Stormy Weather",              artist:"Lena Horne",             genre:"Jazz/Blues",  year:1943},
+  {n:57, title:"The Thrill Is Gone",          artist:"B.B. King",              genre:"Jazz/Blues",  year:1969},
+  {n:58, title:"At Last",                     artist:"Etta James",             genre:"Jazz/Blues",  year:1960},
+  {n:59, title:"God Bless the Child",         artist:"Billie Holiday",         genre:"Jazz/Blues",  year:1941},
+  {n:60, title:"Blowin' in the Wind",         artist:"Bob Dylan",              genre:"Folk",        year:1963},
+  {n:61, title:"This Land Is Your Land",      artist:"Woody Guthrie",          genre:"Folk",        year:1945},
+  {n:62, title:"The Sound of Silence",        artist:"Simon & Garfunkel",      genre:"Folk",        year:1964},
+  {n:63, title:"California Dreamin'",         artist:"The Mamas & the Papas",  genre:"Folk",        year:1966},
+  {n:64, title:"Big Yellow Taxi",             artist:"Joni Mitchell",          genre:"Folk",        year:1970},
+  {n:65, title:"American Pie",                artist:"Don McLean",             genre:"Folk",        year:1971},
+  {n:66, title:"Fire and Rain",               artist:"James Taylor",           genre:"Folk",        year:1970},
+  {n:67, title:"Fast Car",                    artist:"Tracy Chapman",          genre:"Folk",        year:1988},
+  {n:68, title:"Landslide",                   artist:"Fleetwood Mac",          genre:"Folk",        year:1975},
+  {n:69, title:"Turn! Turn! Turn!",           artist:"The Byrds",              genre:"Folk",        year:1965},
+  {n:70, title:"Superbad",                    artist:"James Brown",            genre:"Funk/Disco",  year:1970},
+  {n:71, title:"Le Freak",                    artist:"Chic",                   genre:"Funk/Disco",  year:1978},
+  {n:72, title:"Brick House",                 artist:"Commodores",             genre:"Funk/Disco",  year:1977},
+  {n:73, title:"Play That Funky Music",       artist:"Wild Cherry",            genre:"Funk/Disco",  year:1976},
+  {n:74, title:"I Want You Back",             artist:"The Jackson 5",          genre:"Funk/Disco",  year:1969},
+  {n:75, title:"Boogie Wonderland",           artist:"Earth, Wind & Fire",     genre:"Funk/Disco",  year:1979},
+  {n:76, title:"September",                   artist:"Earth, Wind & Fire",     genre:"Funk/Disco",  year:1978},
+  {n:77, title:"Get Down Tonight",            artist:"KC & the Sunshine Band", genre:"Funk/Disco",  year:1975},
+  {n:78, title:"Flashdance…What a Feeling",   artist:"Irene Cara",             genre:"Funk/Disco",  year:1983},
+  {n:79, title:"Jump (For My Love)",          artist:"The Pointer Sisters",    genre:"Funk/Disco",  year:1984},
+  {n:80, title:"Go Your Own Way",             artist:"Fleetwood Mac",          genre:"Rock",        year:1977},
+  {n:81, title:"Eye of the Tiger",            artist:"Survivor",               genre:"Rock",        year:1982},
+  {n:82, title:"Don't Stop Believin'",        artist:"Journey",                genre:"Rock",        year:1981},
+  {n:83, title:"Sweet Home Alabama",          artist:"Lynyrd Skynyrd",         genre:"Rock",        year:1974},
+  {n:84, title:"Running Down a Dream",        artist:"Tom Petty",              genre:"Rock",        year:1989},
+  {n:85, title:"Dock of the Bay",             artist:"Otis Redding",           genre:"Soul/R&B",    year:1968},
+  {n:86, title:"Piano Man",                   artist:"Billy Joel",             genre:"Rock",        year:1973},
+  {n:87, title:"Thunder Road",                artist:"Bruce Springsteen",      genre:"Rock",        year:1975},
+  {n:88, title:"More Than a Feeling",         artist:"Boston",                 genre:"Rock",        year:1976},
+  {n:89, title:"Jump",                        artist:"Van Halen",              genre:"Rock",        year:1983},
+  {n:90, title:"Mr. Brightside",              artist:"The Killers",            genre:"Rock",        year:2003},
+  {n:91, title:"Seven Nation Army",           artist:"The White Stripes",      genre:"Rock",        year:2003},
+  {n:92, title:"Use Somebody",                artist:"Kings of Leon",          genre:"Rock",        year:2008},
+  {n:93, title:"Neon",                        artist:"John Mayer",             genre:"Pop",         year:2001},
+  {n:94, title:"Alright",                     artist:"Kendrick Lamar",         genre:"Hip-Hop",     year:2015},
+  {n:95, title:"Bad Blood",                   artist:"Taylor Swift",           genre:"Pop",         year:2015},
+  {n:96, title:"Hallelujah",                  artist:"Jeff Buckley",           genre:"Folk",        year:1994},
+  {n:97, title:"Fast Car",                    artist:"Luke Combs",             genre:"Country",     year:2023},
+  {n:98, title:"Flowers",                     artist:"Miley Cyrus",            genre:"Pop",         year:2023},
+  {n:99, title:"Rich Men North of Richmond",  artist:"Oliver Anthony Music",   genre:"Country",     year:2023},
+  {n:100,title:"Without Me",                  artist:"Halsey",                 genre:"Pop",         year:2018},
+];
+
+// ── AUTH (PKCE Authorization Code Flow) ─────────────────────────────────────
+function getToken()   { return localStorage.getItem('sp_token'); }
+function saveToken(t) { localStorage.setItem('sp_token', t); }
+function getRefresh() { return localStorage.getItem('sp_refresh'); }
+function saveRefresh(r){ localStorage.setItem('sp_refresh', r); }
+
+async function sha256(plain) {
+  const enc = new TextEncoder().encode(plain);
+  const hash = await crypto.subtle.digest('SHA-256', enc);
+  return btoa(String.fromCharCode(...new Uint8Array(hash)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+function randomString(len) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from(crypto.getRandomValues(new Uint8Array(len))).map(b => chars[b % chars.length]).join('');
+}
+
+async function login() {
+  const verifier = randomString(64);
+  const challenge = await sha256(verifier);
+  localStorage.setItem('sp_verifier', verifier);
+
+  const url = `https://accounts.spotify.com/authorize` +
+    `?client_id=${CLIENT_ID}` +
+    `&response_type=code` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&scope=${encodeURIComponent(SCOPES)}` +
+    `&code_challenge_method=S256` +
+    `&code_challenge=${challenge}` +
+    `&show_dialog=true`;
+
+  // Redirect the whole page — callback will restore state
+  window.location.href = url;
+}
+
+async function exchangeCode(code) {
+  const verifier = localStorage.getItem('sp_verifier');
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+      client_id: CLIENT_ID,
+      code_verifier: verifier,
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    saveToken(data.access_token);
+    saveRefresh(data.refresh_token);
+    localStorage.removeItem('sp_verifier');
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+    initPlayer(data.access_token);
+  } else {
+    console.error('Token exchange failed', data);
+  }
+}
+
+async function refreshToken() {
+  const refresh = getRefresh();
+  if (!refresh) { login(); return null; }
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refresh,
+      client_id: CLIENT_ID,
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    saveToken(data.access_token);
+    if (data.refresh_token) saveRefresh(data.refresh_token);
+    return data.access_token;
+  }
+  login(); return null;
+}
+
+// Handle callback on page load
+const urlParams = new URLSearchParams(window.location.search);
+const authCode = urlParams.get('code');
+if (authCode) exchangeCode(authCode);
+
+// ── SPOTIFY WEB PLAYBACK SDK ─────────────────────────────────────────────────
+let player, deviceId, currentEl, ticker;
+
+window.onSpotifyWebPlaybackSDKReady = () => {
+  const token = getToken();
+  if (token) initPlayer(token);
+};
+
+function initPlayer(token) {
+  document.getElementById('authBanner').style.display = 'none';
+
+  player = new Spotify.Player({
+    name: '100 Greatest American Songs Player',
+    getOAuthToken: cb => cb(token),
+    volume: 0.8
+  });
+
+  player.addListener('ready', ({ device_id }) => { deviceId = device_id; });
+  player.addListener('not_ready', () => { deviceId = null; });
+
+  player.addListener('player_state_changed', state => {
+    if (!state) return;
+    const item = state.track_window?.current_track;
+    if (item) {
+      document.getElementById('npTitle').textContent = item.name;
+      document.getElementById('npArtist').textContent = item.artists.map(a => a.name).join(', ');
+      document.getElementById('npArt').src = item.album.images[1]?.url || '';
+      document.getElementById('nowPlaying').classList.add('visible');
+    }
+  });
+
+  player.connect();
+}
+
+async function playTrack(track, el) {
+  const token = getToken();
+  if (!token) { login(); return; }
+  if (!deviceId) { alert('Spotify is still connecting — wait a moment and try again.'); return; }
+
+  // Search for the track
+  const q = encodeURIComponent(`${track.title} ${track.artist}`);
+  const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (res.status === 401) { const t = await refreshToken(); if (!t) return; return playTrack(track, el); }
+  const data = await res.json();
+  const item = data.tracks?.items?.[0];
+  if (!item) { alert(`"${track.title}" wasn't found on Spotify.`); return; }
+
+  // Start playback
+  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uris: [item.uri], position_ms: 0 })
+  });
+
+  // Update playing row
+  if (currentEl) currentEl.classList.remove('playing');
+  currentEl = el;
+  el.classList.add('playing');
+
+  // Progress bar — stop after 30 s
+  clearInterval(ticker);
+  let secs = 0;
+  setBar(0); setTime(PREVIEW_SECS);
+  ticker = setInterval(async () => {
+    secs++;
+    setBar((secs / PREVIEW_SECS) * 100);
+    setTime(PREVIEW_SECS - secs);
+    if (secs >= PREVIEW_SECS) {
+      clearInterval(ticker);
+      player.pause();
+      el.classList.remove('playing');
+      document.getElementById('nowPlaying').classList.remove('visible');
+    }
+  }, 1000);
+}
+
+function setBar(pct) { document.getElementById('npBar').style.width = pct + '%'; }
+function setTime(s)  { document.getElementById('npTime').textContent = `0:${String(s).padStart(2,'0')}`; }
+
+document.getElementById('loginBtn').addEventListener('click', login);
+document.getElementById('stopBtn').addEventListener('click', () => {
+  if (player) player.pause();
+  clearInterval(ticker);
+  if (currentEl) { currentEl.classList.remove('playing'); currentEl = null; }
+  document.getElementById('nowPlaying').classList.remove('visible');
+});
+
+// Auto-init if token already saved
+if (getToken()) document.getElementById('authBanner').style.display = 'none';
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+const trackList  = document.getElementById('trackList');
+const noResults  = document.getElementById('noResults');
+const searchInput = document.getElementById('searchInput');
+const genreBtns  = document.querySelectorAll('.genre-btn');
+let activeGenre  = 'all', searchTerm = '';
+
+function render() {
+  const list = tracks.filter(t => {
+    const gOk = activeGenre === 'all' || t.genre === activeGenre;
+    const q = searchTerm.toLowerCase();
+    return gOk && (!q || t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+  });
+  trackList.innerHTML = '';
+  noResults.style.display = list.length ? 'none' : 'block';
+  list.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'track' + (t.n <= 10 ? ' top10' : '');
+    div.style.animationDelay = (i * 0.012) + 's';
+    div.innerHTML = `
+      <div class="track-position">
+        <span class="track-num">${t.n}</span>
+        <span class="play-icon">▶</span>
+      </div>
+      <div class="track-info">
+        <span class="track-title">${t.title}</span>
+        <div class="track-artist">${t.artist}</div>
+      </div>
+      <div class="track-genre">${t.genre}</div>
+      <div class="track-year">${t.year}</div>
+    `;
+    div.addEventListener('click', () => playTrack(t, div));
+    trackList.appendChild(div);
+  });
+}
+
+genreBtns.forEach(btn => btn.addEventListener('click', () => {
+  genreBtns.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeGenre = btn.dataset.genre;
+  render();
+}));
+searchInput.addEventListener('input', e => { searchTerm = e.target.value; render(); });
+
+render();
+</script>
+</body>
+</html>
